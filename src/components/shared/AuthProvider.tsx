@@ -11,6 +11,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
+        const currentUser = useAuth.getState().user;
+        if (!currentUser || currentUser.id !== session.user.id) {
+          setLoading(true);
+        }
         fetchUser(session.user.id);
       } else {
         setLoading(false);
@@ -23,6 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
+        const currentUser = useAuth.getState().user;
+        if (!currentUser || currentUser.id !== session.user.id) {
+          setLoading(true);
+        }
         fetchUser(session.user.id);
       } else {
         setUser(null);
