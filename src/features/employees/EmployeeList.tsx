@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { User, Department } from '../../types';
 import { useAuth } from '../../store/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { parseLocalDate } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -59,6 +60,7 @@ export default function EmployeeList() {
   const [role, setRole] = useState<'ADMIN' | 'HR_MANAGER' | 'EMPLOYEE'>('EMPLOYEE');
   const [designation, setDesignation] = useState('');
   const [departmentId, setDepartmentId] = useState<string>('NONE');
+  const [joiningDate, setJoiningDate] = useState('');
   const [formError, setFormError] = useState('');
 
   // Notification form states
@@ -74,7 +76,7 @@ export default function EmployeeList() {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('users')
-      .select('*, departments(name)')
+      .select('*, departments:departments!users_department_id_fkey(name)')
       .order('first_name', { ascending: true });
     
     if (!error && data) {
@@ -100,6 +102,7 @@ export default function EmployeeList() {
     setRole('EMPLOYEE');
     setDesignation('');
     setDepartmentId('NONE');
+    setJoiningDate('');
     setFormError('');
     setShowAddDialog(true);
   };
@@ -111,6 +114,7 @@ export default function EmployeeList() {
     setRole(emp.role || 'EMPLOYEE');
     setDesignation(emp.designation || '');
     setDepartmentId(emp.department_id || 'NONE');
+    setJoiningDate(emp.joining_date || '');
     setFormError('');
     setShowEditDialog(true);
   };
@@ -194,11 +198,13 @@ export default function EmployeeList() {
       // 3. Since RLS triggerhandle_new_user should run, wait a split second
       // then update the profile details (department_id) which the trigger might not have set.
       const deptVal = departmentId === 'NONE' ? null : departmentId;
+      const joinDateVal = joiningDate || new Date().toISOString().split('T')[0];
       
       const { error: updateError } = await supabase
         .from('users')
         .update({
           department_id: deptVal,
+          joining_date: joinDateVal,
         })
         .eq('id', authData.user.id);
 
@@ -214,6 +220,7 @@ export default function EmployeeList() {
             role,
             designation,
             department_id: deptVal,
+            joining_date: joinDateVal,
           });
         
         if (insertError) throw insertError;
@@ -249,6 +256,7 @@ export default function EmployeeList() {
           role,
           designation,
           department_id: deptVal,
+          joining_date: joiningDate || null,
         })
         .eq('id', selectedEmployee.id);
 
@@ -307,11 +315,11 @@ export default function EmployeeList() {
             <Table>
               <TableHeader className="bg-slate-50/70">
                 <TableRow>
-                  <TableHead className="font-bold text-slate-700">Name</TableHead>
+                  <TableHead className="font-bold text-slate-700">Employee / Title</TableHead>
                   <TableHead className="font-bold text-slate-700">Email</TableHead>
                   <TableHead className="font-bold text-slate-700">Role</TableHead>
                   <TableHead className="font-bold text-slate-700">Department</TableHead>
-                  <TableHead className="font-bold text-slate-700">Designation</TableHead>
+                  <TableHead className="font-bold text-slate-700">Joining Date</TableHead>
                   {canManage && <TableHead className="text-right font-bold text-slate-700 pr-6">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -326,19 +334,29 @@ export default function EmployeeList() {
                 {employees.map((employee) => (
                   <TableRow key={employee.id} className="hover:bg-slate-50/50 transition-colors">
                     <TableCell className="font-semibold text-slate-700">
-                      {employee.first_name} {employee.last_name}
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-bold text-sm shrink-0 border border-slate-200">
+                          {employee.first_name?.[0] || ''}{employee.last_name?.[0] || ''}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800">{employee.first_name} {employee.last_name}</p>
+                          <p className="text-xs text-slate-400 font-normal">{employee.designation || '—'}</p>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-slate-600">{employee.email}</TableCell>
                     <TableCell>
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                        employee.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-800' :
-                        employee.role === 'HR_MANAGER' ? 'bg-orange-100 text-orange-800' : 'bg-slate-100 text-slate-700'
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                        employee.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                        employee.role === 'HR_MANAGER' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-slate-50 text-slate-600 border-slate-200'
                       }`}>
                         {employee.role?.replace('_', ' ')}
                       </span>
                     </TableCell>
                     <TableCell className="text-slate-600">{employee.departments?.name || '—'}</TableCell>
-                    <TableCell className="text-slate-600">{employee.designation || '—'}</TableCell>
+                    <TableCell className="text-slate-600">
+                      {employee.joining_date ? parseLocalDate(employee.joining_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </TableCell>
                     {canManage && (
                       <TableCell className="text-right space-x-2 pr-6">
                         <Button 
@@ -427,19 +445,31 @@ export default function EmployeeList() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Department</Label>
-              <Select value={departmentId} onValueChange={setDepartmentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">No Department</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="add-joiningDate">Joining Date</Label>
+                <Input 
+                  id="add-joiningDate" 
+                  type="date" 
+                  value={joiningDate} 
+                  onChange={(e) => setJoiningDate(e.target.value)} 
+                  className="border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Select value={departmentId} onValueChange={setDepartmentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NONE">No Department</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {formError && (
@@ -499,19 +529,31 @@ export default function EmployeeList() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Department</Label>
-              <Select value={departmentId} onValueChange={setDepartmentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NONE">No Department</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-joiningDate">Joining Date</Label>
+                <Input 
+                  id="edit-joiningDate" 
+                  type="date" 
+                  value={joiningDate} 
+                  onChange={(e) => setJoiningDate(e.target.value)} 
+                  className="border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Select value={departmentId} onValueChange={setDepartmentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NONE">No Department</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {formError && (
