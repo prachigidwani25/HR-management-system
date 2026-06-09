@@ -94,7 +94,7 @@ export default function LeaveManagement() {
   const fetchLeaves = async () => {
     let query = supabase
       .from('leaves')
-      .select('*, users(first_name, last_name)')
+      .select('*, users:users!leaves_user_id_fkey(first_name, last_name)')
       .order('created_at', { ascending: false });
 
     if (user?.role === 'EMPLOYEE') {
