@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Plus, Loader2, Megaphone, Trash2, Pin, Calendar, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { getLocalDateString, parseLocalDate } from '../../lib/utils';
 
 interface Announcement {
   id: string;
@@ -43,7 +44,7 @@ export default function AnnouncementsPage() {
 
   const fetchAnnouncements = async () => {
     setIsLoading(true);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     
     // Fetch non-expired announcements
     const { data, error } = await supabase
@@ -199,7 +200,7 @@ export default function AnnouncementsPage() {
                     <div className="flex justify-between items-center border-t border-slate-100 pt-4 mt-4 text-xs text-slate-400 font-medium">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5 text-slate-350" />
-                        Expires: {ann.expires_at ? format(new Date(ann.expires_at), 'MMM dd, yyyy') : 'Never'}
+                        Expires: {ann.expires_at ? format(parseLocalDate(ann.expires_at), 'MMM dd, yyyy') : 'Never'}
                       </span>
                       {isHrOrAdmin && (
                         <Button

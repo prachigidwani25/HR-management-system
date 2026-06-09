@@ -7,6 +7,7 @@ import {
   XCircle, AlertCircle, Calendar, Megaphone, UserCheck, UserMinus 
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getLocalDateString, parseLocalDate } from '../../lib/utils';
 
 interface Stats {
   totalEmployees: number;
@@ -71,7 +72,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     if (!user) return;
     setIsLoading(true);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const currentYear = new Date().getFullYear();
 
     try {
@@ -365,7 +366,7 @@ export default function Dashboard() {
                           {leave.leave_type.toLowerCase()} Leave
                         </p>
                         <p className="text-xs text-slate-400">
-                          {format(new Date(leave.start_date), 'MMM dd')} – {format(new Date(leave.end_date), 'MMM dd, yyyy')}
+                          {format(parseLocalDate(leave.start_date), 'MMM dd')} – {format(parseLocalDate(leave.end_date), 'MMM dd, yyyy')}
                         </p>
                         {user?.role !== 'EMPLOYEE' && leave.users && (
                           <p className="text-xs text-indigo-600 font-medium mt-0.5">
@@ -455,7 +456,7 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right shrink-0">
                         <span className="text-xs font-bold bg-white text-indigo-600 border px-2 py-1 rounded-md shadow-xs">
-                          {format(new Date(h.holiday_date), 'MMM dd')}
+                          {format(parseLocalDate(h.holiday_date), 'MMM dd')}
                         </span>
                       </div>
                     </div>

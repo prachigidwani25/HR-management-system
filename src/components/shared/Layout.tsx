@@ -76,9 +76,19 @@ export function Layout() {
       .order('created_at', { ascending: false })
       .limit(10);
 
+    const { count, error: countError } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_read', false);
+
     if (!error && data) {
       setNotifications(data as NotificationItem[]);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+      if (!countError) {
+        setUnreadCount(count || 0);
+      } else {
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
     }
   };
 

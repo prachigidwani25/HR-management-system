@@ -8,6 +8,7 @@ import { Clock, LogIn, LogOut, Loader2, CalendarDays } from 'lucide-react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '../../components/ui/table';
+import { getLocalDateString, parseLocalDate } from '../../lib/utils';
 
 interface AttendanceRecord {
   id: string;
@@ -27,7 +28,7 @@ export default function AttendancePage() {
   const [isClocking, setIsClocking] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
 
   useEffect(() => {
     fetchAttendance();
@@ -211,7 +212,7 @@ export default function AttendancePage() {
                         {rec.users?.first_name} {rec.users?.last_name}
                       </TableCell>
                     )}
-                    <TableCell>{new Date(rec.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</TableCell>
+                    <TableCell>{parseLocalDate(rec.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</TableCell>
                     <TableCell className="text-green-600 font-medium">{formatTime(rec.clock_in)}</TableCell>
                     <TableCell className="text-red-500 font-medium">{formatTime(rec.clock_out)}</TableCell>
                     <TableCell>{calcDuration(rec.clock_in, rec.clock_out)}</TableCell>

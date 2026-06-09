@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { parseLocalDate } from '../../lib/utils';
 
 interface LeaveWithUser extends Leave {
   users?: { first_name: string; last_name: string } | null;
@@ -274,17 +275,17 @@ export default function LeaveManagement() {
       await supabase.from('notifications').insert({
         user_id: leave.user_id,
         title: `Leave Request ${status === 'APPROVED' ? 'Approved' : 'Rejected'}`,
-        message: `Your leave request for ${leave.leave_type.toLowerCase()} leave starting ${format(new Date(leave.start_date), 'MMM d, yyyy')} has been ${status.toLowerCase()} by the HR department.`,
+        message: `Your leave request for ${leave.leave_type.toLowerCase()} leave starting ${format(parseLocalDate(leave.start_date), 'MMM d, yyyy')} has been ${status.toLowerCase()} by the HR department.`,
         is_read: false
       });
 
       // 2. If approved, automatically insert attendance records as 'ON_LEAVE'
       if (status === 'APPROVED') {
-        const start = new Date(leave.start_date);
-        const end = new Date(leave.end_date);
+        const start = new Date(leave.start_date + 'T00:00:00Z');
+        const end = new Date(leave.end_date + 'T00:00:00Z');
         const attendanceInserts = [];
         
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
           const dateStr = d.toISOString().split('T')[0];
           attendanceInserts.push({
             user_id: leave.user_id,
@@ -498,8 +499,8 @@ export default function LeaveManagement() {
                           <TableCell className="font-semibold capitalize text-slate-700">
                             {leave.leave_type.toLowerCase()} Leave
                           </TableCell>
-                          <TableCell className="text-slate-600">{format(new Date(leave.start_date), 'MMM d, yyyy')}</TableCell>
-                          <TableCell className="text-slate-600">{format(new Date(leave.end_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell className="text-slate-600">{format(parseLocalDate(leave.start_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell className="text-slate-600">{format(parseLocalDate(leave.end_date), 'MMM d, yyyy')}</TableCell>
                           <TableCell className="max-w-[200px] truncate text-slate-500" title={leave.reason}>{leave.reason}</TableCell>
                           <TableCell>{getStatusBadge(leave.status)}</TableCell>
                           <TableCell className="text-right space-x-2 pr-6">
@@ -641,8 +642,8 @@ export default function LeaveManagement() {
                       <TableCell className="font-semibold capitalize text-slate-700">
                         {leave.leave_type.toLowerCase()} Leave
                       </TableCell>
-                      <TableCell className="text-slate-600">{format(new Date(leave.start_date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell className="text-slate-600">{format(new Date(leave.end_date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="text-slate-600">{format(parseLocalDate(leave.start_date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell className="text-slate-600">{format(parseLocalDate(leave.end_date), 'MMM d, yyyy')}</TableCell>
                       <TableCell className="max-w-[200px] truncate text-slate-500" title={leave.reason}>{leave.reason}</TableCell>
                       <TableCell>{getStatusBadge(leave.status)}</TableCell>
                     </TableRow>

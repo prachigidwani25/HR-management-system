@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Plus, Loader2, Calendar, Trash2, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { parseLocalDate } from '../../lib/utils';
 
 interface Holiday {
   id: string;
@@ -144,14 +145,14 @@ export default function HolidaysPage() {
                 <div key={h.id} className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-indigo-55 bg-indigo-50/50 rounded-xl flex flex-col items-center justify-center border border-indigo-100 shrink-0">
-                      <span className="text-[10px] text-indigo-500 font-bold uppercase">{format(new Date(h.holiday_date), 'MMM')}</span>
-                      <span className="text-lg font-extrabold text-indigo-700 leading-none">{format(new Date(h.holiday_date), 'd')}</span>
+                      <span className="text-[10px] text-indigo-500 font-bold uppercase">{format(parseLocalDate(h.holiday_date), 'MMM')}</span>
+                      <span className="text-lg font-extrabold text-indigo-700 leading-none">{format(parseLocalDate(h.holiday_date), 'd')}</span>
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-800">{h.name}</h3>
                       <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                         <MapPin className="h-3 w-3 text-slate-300" />
-                        {format(new Date(h.holiday_date), 'EEEE')} | <span className="capitalize">{h.type.toLowerCase()} Holiday</span>
+                        {format(parseLocalDate(h.holiday_date), 'EEEE')} | <span className="capitalize">{h.type.toLowerCase()} Holiday</span>
                       </p>
                       {h.description && (
                         <p className="text-xs text-slate-500 mt-1.5 italic">{h.description}</p>
