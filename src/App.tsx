@@ -13,6 +13,7 @@ import DocumentsPage from './features/documents/Documents';
 import SettingsPage from './features/settings/Settings';
 import HolidaysPage from './features/holidays/Holidays';
 import AnnouncementsPage from './features/announcements/Announcements';
+import TestDashboard from './features/settings/TestDashboard';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
               <Route path="/announcements" element={<AnnouncementsPage />} />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/system-tests" element={<TestDashboard />} />
 
               {/* Admin & HR Manager only */}
               <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'HR_MANAGER']} />}>

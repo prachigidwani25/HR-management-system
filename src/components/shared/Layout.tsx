@@ -22,6 +22,7 @@ import {
   Calendar,
   Check,
   CheckSquare,
+  Terminal,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
@@ -134,6 +135,7 @@ export function Layout() {
     { name: 'Announcements', path: '/announcements', icon: Bell,            roles: ['ADMIN', 'HR_MANAGER', 'EMPLOYEE'] },
     { name: 'Documents',     path: '/documents',     icon: FileText,        roles: ['ADMIN', 'HR_MANAGER', 'EMPLOYEE'] },
     { name: 'Settings',      path: '/settings',      icon: Settings,        roles: ['ADMIN', 'HR_MANAGER', 'EMPLOYEE'] },
+    { name: 'System Tests',  path: '/system-tests',  icon: Terminal,        roles: ['ADMIN', 'HR_MANAGER', 'EMPLOYEE'] },
   ];
 
   const filteredNav = navItems.filter(item =>
